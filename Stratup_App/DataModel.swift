@@ -1,41 +1,35 @@
-//
-//  DataModel.swift
-//  Stratup_App
-//
-//  Created by Baksheesh Singh on 02/06/26.
-//
+// DataModel.swift
+// NiveshSaathi — Complete Data Model
+// All models, enums, and the ProfileStore live here.
+// Swap ProfileStore's backend to SwiftData in v2 without touching any ViewModel.
 
-// WealthWise — Complete Data Model
-// All models are value types (struct) + Codable for UserDefaults persistence in v1.
-// Swap ProfileStore's backend to SwiftData/CoreData in v2 without touching any ViewModel.
- 
 import Foundation
 import Observation
 
 // ─────────────────────────────────────────────
 // MARK: — Enumerations
 // ─────────────────────────────────────────────
- 
+
 enum IncomeType: String, Codable, CaseIterable {
     case salaried   = "Salaried"
     case freelance  = "Freelance"
     case business   = "Business"
     case student    = "Student / No income yet"
 }
- 
+
 enum DependantTier: String, Codable, CaseIterable {
-    case none       = "None"
-    case oneOrTwo   = "1–2"
+    case none        = "None"
+    case oneOrTwo    = "1–2"
     case threeOrMore = "3+"
 }
- 
+
 enum RiskLevel: String, Codable, CaseIterable {
     case conservative = "Conservative"
     case moderate     = "Moderate"
     case aggressive   = "Aggressive"
- 
+
     /// Warikoo's plain-language risk test description shown to user
-    var description: String {
+    var riskDescription: String {
         switch self {
         case .conservative: return "I prefer stability. A 20% portfolio drop would make me sell."
         case .moderate:     return "I can hold steady through a 30–40% drop without panic."
@@ -43,7 +37,7 @@ enum RiskLevel: String, Codable, CaseIterable {
         }
     }
 }
- 
+
 enum InvestmentGoal: String, Codable, CaseIterable {
     case wealthBuilding = "General wealth building"
     case retirement     = "Retirement corpus"
@@ -53,26 +47,26 @@ enum InvestmentGoal: String, Codable, CaseIterable {
     case car            = "Buy a car"
     case emergencyBuild = "Build emergency fund"
 }
- 
+
 enum GoalStatus: String, Codable {
     case notStarted = "Not started"
     case inProgress = "In progress"
     case achieved   = "Achieved"
     case paused     = "Paused"
 }
- 
+
 enum AssetClass: String, Codable, CaseIterable {
     case equityMutualFund   = "Equity mutual funds (SIP)"
     case ppf                = "PPF"
     case nps                = "NPS"
     case digitalGold        = "Digital gold / SGBs"
     case debtFund           = "Debt mutual funds"
-    case fixedDeposit        = "Fixed deposit"
+    case fixedDeposit       = "Fixed deposit"
     case usStocks           = "US stocks / ETFs"
     case directStocks       = "Direct Indian stocks"
     case liquidFund         = "Liquid fund (emergency)"
     case epfVpf             = "EPF / VPF top-up"
- 
+
     var riskCategory: String {
         switch self {
         case .equityMutualFund, .directStocks, .usStocks: return "High growth"
@@ -83,17 +77,64 @@ enum AssetClass: String, Codable, CaseIterable {
         }
     }
 }
- 
+
 enum BucketTag: String, Codable {
     case grow   = "grow"    // High growth, equity-type instruments
     case safe   = "safe"    // PPF, debt, gold — stable
     case avoid  = "avoid"   // FDs for young aggressive investors, etc.
 }
- 
+
+enum AgeBracket: String, Codable {
+    case earlyCareer       = "Early career (< 22)"
+    case youngProfessional = "Young professional (22–29)"
+    case midCareer         = "Mid career (30–39)"
+    case preRetirement     = "Pre-retirement (40–49)"
+    case retirement        = "Retirement (50+)"
+
+    /// Recommended equity % of investable amount — Warikoo's age-based rule
+    var recommendedEquityPercent: Double {
+        switch self {
+        case .earlyCareer:       return 0.75
+        case .youngProfessional: return 0.65
+        case .midCareer:         return 0.55
+        case .preRetirement:     return 0.40
+        case .retirement:        return 0.25
+        }
+    }
+
+    /// Months of emergency fund recommended
+    var emergencyFundMonths: Int { return 6 }
+}
+
+enum SafetyWarning: Codable, Equatable {
+    case noTermInsurance
+    case noHealthInsurance
+    case emergencyFundIncomplete(gap: Double)
+
+    var title: String {
+        switch self {
+        case .noTermInsurance:         return "Get term insurance first"
+        case .noHealthInsurance:       return "Get health insurance first"
+        case .emergencyFundIncomplete: return "Emergency fund incomplete"
+        }
+    }
+
+    var explanation: String {
+        switch self {
+        case .noTermInsurance:
+            return "Warikoo's rule #1: before investing a single rupee, get a term plan. ₹1 crore cover costs ~₹500–800/mo at your age."
+        case .noHealthInsurance:
+            return "A single hospitalisation can wipe out years of savings. Health insurance is not optional."
+        case .emergencyFundIncomplete(let gap):
+            return "You need ₹\(Int(gap).formatted()) more in a liquid fund before starting equity SIPs."
+        }
+    }
+}
+
 // ─────────────────────────────────────────────
 // MARK: — Core Entities
 // ─────────────────────────────────────────────
- 
+
 /// Root entity. Everything hangs off this.
 struct UserProfile: Codable, Identifiable {
     let id: UUID
@@ -104,7 +145,7 @@ struct UserProfile: Codable, Identifiable {
     var dependants: DependantTier
     var createdAt: Date
     var updatedAt: Date
- 
+
     init(name: String, age: Int, city: String,
          incomeType: IncomeType, dependants: DependantTier) {
         self.id         = UUID()
@@ -116,7 +157,7 @@ struct UserProfile: Codable, Identifiable {
         self.createdAt  = Date()
         self.updatedAt  = Date()
     }
- 
+
     /// Age bracket drives equity %, SIP advice, and risk messaging
     var ageBracket: AgeBracket {
         switch age {
@@ -128,33 +169,11 @@ struct UserProfile: Codable, Identifiable {
         }
     }
 }
- 
-enum AgeBracket: String, Codable {
-    case earlyCareer       = "Early career (< 22)"
-    case youngProfessional = "Young professional (22–29)"
-    case midCareer         = "Mid career (30–39)"
-    case preRetirement     = "Pre-retirement (40–49)"
-    case retirement        = "Retirement (50+)"
- 
-    /// Recommended equity % of investable amount — Warikoo's age-based rule
-    var recommendedEquityPercent: Double {
-        switch self {
-        case .earlyCareer:       return 0.75
-        case .youngProfessional: return 0.65
-        case .midCareer:         return 0.55
-        case .preRetirement:     return 0.40
-        case .retirement:        return 0.25
-        }
-    }
- 
-    /// Months of emergency fund recommended (freelancers get +3)
-    var emergencyFundMonths: Int { return 6 }
-}
- 
+
 // ─────────────────────────────────────────────
 // MARK: — Income & Expenses
 // ─────────────────────────────────────────────
- 
+
 struct IncomeData: Codable, Identifiable {
     let id: UUID
     let userProfileId: UUID
@@ -165,7 +184,7 @@ struct IncomeData: Codable, Identifiable {
     var hasSalaryHike: Bool          // flag: user anticipates a raise
     var projectedIncome: Double      // optional: post-hike expected income
     var recordedAt: Date
- 
+
     init(userProfileId: UUID, monthlyIncome: Double, otherIncome: Double = 0,
          monthlyExpenses: Double, emiObligations: Double = 0,
          hasSalaryHike: Bool = false, projectedIncome: Double = 0) {
@@ -179,12 +198,12 @@ struct IncomeData: Codable, Identifiable {
         self.projectedIncome  = projectedIncome
         self.recordedAt       = Date()
     }
- 
+
     var totalIncome: Double { monthlyIncome + otherIncome }
- 
+
     /// Raw surplus before the allocation engine runs
     var rawSurplus: Double { totalIncome - monthlyExpenses - emiObligations }
- 
+
     /// Freelancers have variable income: conservative 70% of stated income
     func effectiveIncome(for incomeType: IncomeType) -> Double {
         switch incomeType {
@@ -193,11 +212,11 @@ struct IncomeData: Codable, Identifiable {
         }
     }
 }
- 
+
 // ─────────────────────────────────────────────
 // MARK: — Risk & Goals
 // ─────────────────────────────────────────────
- 
+
 struct RiskProfile: Codable, Identifiable {
     let id: UUID
     let userProfileId: UUID
@@ -207,10 +226,10 @@ struct RiskProfile: Codable, Identifiable {
     var hasTermInsurance: Bool
     var hasHealthInsurance: Bool
     var hasEmergencyFund: Bool
-    var existingEmergencyFund: Double   // amount already saved in liquid/savings
-    var existingInvestments: [AssetClass]  // what they already have
+    var existingEmergencyFund: Double
+    var existingInvestments: [AssetClass]
     var assessedAt: Date
- 
+
     init(userProfileId: UUID, riskLevel: RiskLevel, primaryGoal: InvestmentGoal,
          investmentHorizonYears: Int, hasTermInsurance: Bool, hasHealthInsurance: Bool,
          hasEmergencyFund: Bool, existingEmergencyFund: Double,
@@ -228,11 +247,11 @@ struct RiskProfile: Codable, Identifiable {
         self.assessedAt             = Date()
     }
 }
- 
+
 // ─────────────────────────────────────────────
 // MARK: — Safety Check (Warikoo's prerequisites)
 // ─────────────────────────────────────────────
- 
+
 struct SafetyCheck: Codable, Identifiable {
     let id: UUID
     let userProfileId: UUID
@@ -243,11 +262,11 @@ struct SafetyCheck: Codable, Identifiable {
     var emergencyFundCurrent: Double
     var safetyScore: Int                // 0–100, shown as progress ring in UI
     var checkedAt: Date
- 
+
     var emergencyFundGap: Double {
         max(0, emergencyFundTarget - emergencyFundCurrent)
     }
- 
+
     /// Blocking warnings — shown BEFORE any investment suggestion
     var blockingWarnings: [SafetyWarning] {
         var warnings: [SafetyWarning] = []
@@ -257,111 +276,59 @@ struct SafetyCheck: Codable, Identifiable {
         return warnings
     }
 }
- 
-enum SafetyWarning: Codable, Equatable {
-    case noTermInsurance
-    case noHealthInsurance
-    case emergencyFundIncomplete(gap: Double)
- 
-    var title: String {
-        switch self {
-        case .noTermInsurance:    return "Get term insurance first"
-        case .noHealthInsurance:  return "Get health insurance first"
-        case .emergencyFundIncomplete: return "Emergency fund incomplete"
-        }
-    }
- 
-    var explanation: String {
-        switch self {
-        case .noTermInsurance:
-            return "Warikoo's rule #1: before investing a single rupee, get a term plan. ₹1 crore cover costs ~₹500–800/mo at your age."
-        case .noHealthInsurance:
-            return "A single hospitalisation can wipe out years of savings. Health insurance is not optional."
-        case .emergencyFundIncomplete(let gap):
-            return "You need ₹\(Int(gap).formatted()) more in a liquid fund before starting equity SIPs."
-        }
-    }
-}
- 
+
 // ─────────────────────────────────────────────
 // MARK: — Layer 1: Salary Allocation
 // ─────────────────────────────────────────────
- 
+
+struct AllocationBucket: Codable, Identifiable {
+    let id: UUID
+    var label: String
+    var amount: Double
+    var colorName: String       // Asset catalog color name, used by UI
+
+    init(label: String, amount: Double, colorName: String) {
+        self.id        = UUID()
+        self.label     = label
+        self.amount    = amount
+        self.colorName = colorName
+    }
+}
+
 struct SalaryAllocation: Codable, Identifiable {
     let id: UUID
     let userProfileId: UUID
     let incomeDataId: UUID
     var rent: Double
     var dailyExpenses: Double
-    var lifestyle: Double               // wants, dining, entertainment
+    var lifestyle: Double
     var termInsurancePremium: Double
     var healthInsurancePremium: Double
     var emergencySIP: Double            // liquid fund SIP — NOT investment
     var investmentBucket: Double        // THIS feeds Layer 2
-    var flexBuffer: Double              // rounding/remainder
+    var flexBuffer: Double
     var totalAllocated: Double
     var generatedAt: Date
- 
+
     /// Convenience: all buckets as ordered array for UI rendering
     var buckets: [AllocationBucket] {
         [
-            AllocationBucket(label: "Rent / housing",           amount: rent,                   color: "#888780"),
-            AllocationBucket(label: "Daily expenses",           amount: dailyExpenses,           color: "#888780"),
-            AllocationBucket(label: "Lifestyle / wants",        amount: lifestyle,               color: "#AFA9EC"),
-            AllocationBucket(label: "Term insurance",           amount: termInsurancePremium,    color: "#1D9E75"),
-            AllocationBucket(label: "Health insurance",         amount: healthInsurancePremium,  color: "#1D9E75"),
-            AllocationBucket(label: "Emergency fund SIP",       amount: emergencySIP,            color: "#EF9F27"),
-            AllocationBucket(label: "Investment bucket",        amount: investmentBucket,        color: "#7F77DD"),
-            AllocationBucket(label: "Flex / buffer",            amount: flexBuffer,              color: "#D3D1C7"),
+            AllocationBucket(label: "Rent / housing",           amount: rent,                   colorName: "AllocationGray"),
+            AllocationBucket(label: "Daily expenses",           amount: dailyExpenses,           colorName: "AllocationGray"),
+            AllocationBucket(label: "Lifestyle / wants",        amount: lifestyle,               colorName: "AccentPurple"),
+            AllocationBucket(label: "Term insurance",           amount: termInsurancePremium,    colorName: "SafetyGreen"),
+            AllocationBucket(label: "Health insurance",         amount: healthInsurancePremium,  colorName: "SafetyGreen"),
+            AllocationBucket(label: "Emergency fund SIP",       amount: emergencySIP,            colorName: "WarningAmber"),
+            AllocationBucket(label: "Investment bucket",        amount: investmentBucket,        colorName: "AccentPurple"),
+            AllocationBucket(label: "Flex / buffer",            amount: flexBuffer,              colorName: "BufferGray"),
         ]
     }
 }
- 
-struct AllocationBucket: Codable, Identifiable {
-    let id: UUID
-    var label: String
-    var amount: Double
-    var color: String           // hex, used by Swift Charts
 
-    init(label: String, amount: Double, color: String) {
-        self.id     = UUID()
-        self.label  = label
-        self.amount = amount
-        self.color  = color
-    }
-}
- 
 // ─────────────────────────────────────────────
 // MARK: — Layer 2: Investment Plan & Buckets
 // ─────────────────────────────────────────────
- 
-struct InvestmentPlan: Codable, Identifiable {
-    let id: UUID
-    let userProfileId: UUID
-    let salaryAllocationId: UUID
-    var totalInvestable: Double
-    var ageAtGeneration: Int
-    var riskAtGeneration: RiskLevel
-    var buckets: [InvestmentBucket]
-    var isActive: Bool
-    var generatedAt: Date
- 
-    /// Sum sanity check — should equal totalInvestable
-    var allocatedTotal: Double {
-        buckets.reduce(0) { $0 + $1.monthlyAmount }
-    }
- 
-    /// 30-year projection at assumed CAGR (equity-weighted)
-    func projectedCorpus(years: Int = 30) -> Double {
-        let monthlyEquity = buckets
-            .filter { $0.tag == .grow }
-            .reduce(0.0) { $0 + $1.monthlyAmount }
-        let rate = 0.12 / 12
-        let n = Double(years * 12)
-        return monthlyEquity * ((pow(1 + rate, n) - 1) / rate) * (1 + rate)
-    }
-}
- 
+
 struct InvestmentBucket: Codable, Identifiable {
     let id: UUID
     let investmentPlanId: UUID
@@ -370,9 +337,9 @@ struct InvestmentBucket: Codable, Identifiable {
     var monthlyAmount: Double
     var tag: BucketTag
     var whyExplanation: String      // Warikoo-style plain language shown in UI
-    var suggestedInstrument: String // e.g. "Nifty 50 index fund (Zerodha Coin / Groww)"
+    var suggestedInstrument: String
     var updatedAt: Date
- 
+
     init(investmentPlanId: UUID, assetClass: AssetClass, percentage: Double,
          monthlyAmount: Double, tag: BucketTag,
          whyExplanation: String, suggestedInstrument: String) {
@@ -387,22 +354,49 @@ struct InvestmentBucket: Codable, Identifiable {
         self.updatedAt           = Date()
     }
 }
- 
+
+struct InvestmentPlan: Codable, Identifiable {
+    let id: UUID
+    let userProfileId: UUID
+    let salaryAllocationId: UUID
+    var totalInvestable: Double
+    var ageAtGeneration: Int
+    var riskAtGeneration: RiskLevel
+    var buckets: [InvestmentBucket]
+    var isActive: Bool
+    var generatedAt: Date
+
+    /// Sum sanity check — should equal totalInvestable
+    var allocatedTotal: Double {
+        buckets.reduce(0) { $0 + $1.monthlyAmount }
+    }
+
+    /// 30-year projection at assumed CAGR (equity-weighted)
+    func projectedCorpus(years: Int = 30) -> Double {
+        let monthlyEquity = buckets
+            .filter { $0.tag == .grow }
+            .reduce(0.0) { $0 + $1.monthlyAmount }
+        let rate = 0.12 / 12
+        let n = Double(years * 12)
+        return monthlyEquity * ((pow(1 + rate, n) - 1) / rate) * (1 + rate)
+    }
+}
+
 // ─────────────────────────────────────────────
 // MARK: — Financial Goals
 // ─────────────────────────────────────────────
- 
+
 struct FinancialGoal: Codable, Identifiable {
     let id: UUID
     let userProfileId: UUID
     var goalType: InvestmentGoal
-    var goalName: String            // user-editable label, e.g. "Goa trip 2026"
+    var goalName: String
     var targetAmount: Double
     var targetYears: Int
     var currentSaved: Double
     var status: GoalStatus
     var createdAt: Date
- 
+
     init(userProfileId: UUID, goalType: InvestmentGoal, goalName: String,
          targetAmount: Double, targetYears: Int, currentSaved: Double = 0) {
         self.id             = UUID()
@@ -415,7 +409,7 @@ struct FinancialGoal: Codable, Identifiable {
         self.status         = .notStarted
         self.createdAt      = Date()
     }
- 
+
     /// Monthly SIP needed to hit goal, assuming 12% CAGR
     var monthlySIPNeeded: Double {
         let remaining = targetAmount - currentSaved
@@ -424,29 +418,28 @@ struct FinancialGoal: Codable, Identifiable {
         let r = 0.12 / 12
         return remaining * r / (pow(1 + r, n) - 1)
     }
- 
+
     var progressPercent: Double {
         guard targetAmount > 0 else { return 0 }
         return min(1.0, currentSaved / targetAmount)
     }
 }
- 
+
 // ─────────────────────────────────────────────
-// MARK: — Snapshot History (for progress tracking)
+// MARK: — Snapshot History
 // ─────────────────────────────────────────────
- 
+
 /// Saved every time user updates income or re-generates their plan.
-/// Powers the "your journey" timeline in the app.
 struct SnapshotHistory: Codable, Identifiable {
     let id: UUID
     let userProfileId: UUID
     var salaryAtSnapshot: Double
     var ageAtSnapshot: Int
     var investmentBucketAmount: Double
-    var totalInvestedTillDate: Double   // user self-reported or derived from past snapshots
-    var planSummaryJSON: String         // serialised InvestmentPlan for archiving
+    var totalInvestedTillDate: Double
+    var planSummaryJSON: String
     var snapshotDate: Date
- 
+
     init(userProfileId: UUID, salaryAtSnapshot: Double, ageAtSnapshot: Int,
          investmentBucketAmount: Double, totalInvestedTillDate: Double,
          plan: InvestmentPlan) {
@@ -460,7 +453,6 @@ struct SnapshotHistory: Codable, Identifiable {
         self.planSummaryJSON        = Self.encodePlan(plan)
     }
 
-    /// Encode an InvestmentPlan to JSON string for archival
     private static func encodePlan(_ plan: InvestmentPlan) -> String {
         do {
             let data = try JSONEncoder().encode(plan)
@@ -471,19 +463,17 @@ struct SnapshotHistory: Codable, Identifiable {
         }
     }
 
-    /// Decode the archived plan back from JSON
     func decodePlan() -> InvestmentPlan? {
         guard let data = planSummaryJSON.data(using: .utf8) else { return nil }
         return try? JSONDecoder().decode(InvestmentPlan.self, from: data)
     }
 }
- 
+
 // ─────────────────────────────────────────────
-// MARK: — App State Container (single source of truth)
+// MARK: — App State Container
 // ─────────────────────────────────────────────
- 
+
 /// The root object held by ProfileStore and injected via @Environment.
-/// Every ViewModel reads and writes through this.
 struct AppState: Codable {
     var userProfile: UserProfile?
     var incomeData: IncomeData?
@@ -493,7 +483,7 @@ struct AppState: Codable {
     var activePlan: InvestmentPlan?
     var goals: [FinancialGoal] = []
     var snapshots: [SnapshotHistory] = []
- 
+
     /// True only when all onboarding steps are complete
     var isOnboardingComplete: Bool {
         userProfile != nil &&
@@ -501,38 +491,42 @@ struct AppState: Codable {
         riskProfile != nil
     }
 }
- 
+
 // ─────────────────────────────────────────────
 // MARK: — Persistence Layer
 // ─────────────────────────────────────────────
- 
+
 /// v1: UserDefaults-backed store. Replace body with SwiftData in v2.
-///
-/// Uses the Swift 5.9+ @Observable macro. Inject into the SwiftUI hierarchy
-/// with `.environment()` and read in views with `@Environment(ProfileStore.self)`.
 @Observable
 final class ProfileStore {
+
+    // MARK: — State
     var state: AppState = AppState()
- 
-    private let key = "wealthwise.appstate.v1"
- 
+
+    // MARK: — Dependencies
+    @ObservationIgnored private let key = "niveshsaathi.appstate.v1"
+    @ObservationIgnored private let encoder = JSONEncoder()
+    @ObservationIgnored private let decoder = JSONDecoder()
+
+    // MARK: — Init
     init() { load() }
- 
+
+    // MARK: — Intents
+
     func save() {
-        guard let data = try? JSONEncoder().encode(state) else { return }
+        guard let data = try? encoder.encode(state) else { return }
         UserDefaults.standard.set(data, forKey: key)
     }
- 
+
     func load() {
         guard let data = UserDefaults.standard.data(forKey: key),
-              let decoded = try? JSONDecoder().decode(AppState.self, from: data)
+              let decoded = try? decoder.decode(AppState.self, from: data)
         else { return }
         state = decoded
     }
- 
+
     func reset() {
         state = AppState()
         UserDefaults.standard.removeObject(forKey: key)
     }
 }
- 
