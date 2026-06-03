@@ -10,7 +10,7 @@
 // Swap ProfileStore's backend to SwiftData/CoreData in v2 without touching any ViewModel.
  
 import Foundation
-internal import Combine
+import Observation
 
 // ─────────────────────────────────────────────
 // MARK: — Enumerations
@@ -129,7 +129,7 @@ struct UserProfile: Codable, Identifiable {
     }
 }
  
-enum AgeBracket: String {
+enum AgeBracket: String, Codable {
     case earlyCareer       = "Early career (< 22)"
     case youngProfessional = "Young professional (22–29)"
     case midCareer         = "Mid career (30–39)"
@@ -258,7 +258,7 @@ struct SafetyCheck: Codable, Identifiable {
     }
 }
  
-enum SafetyWarning: Equatable {
+enum SafetyWarning: Codable, Equatable {
     case noTermInsurance
     case noHealthInsurance
     case emergencyFundIncomplete(gap: Double)
@@ -318,10 +318,17 @@ struct SalaryAllocation: Codable, Identifiable {
 }
  
 struct AllocationBucket: Codable, Identifiable {
-    let id = UUID()
+    let id: UUID
     var label: String
     var amount: Double
     var color: String           // hex, used by Swift Charts
+
+    init(label: String, amount: Double, color: String) {
+        self.id     = UUID()
+        self.label  = label
+        self.amount = amount
+        self.color  = color
+    }
 }
  
 // ─────────────────────────────────────────────
@@ -450,8 +457,24 @@ struct SnapshotHistory: Codable, Identifiable {
         self.investmentBucketAmount = investmentBucketAmount
         self.totalInvestedTillDate  = totalInvestedTillDate
         self.snapshotDate           = Date()
-        let encoded = try? JSONEncoder().encode(plan)
-        self.planSummaryJSON = encoded.flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
+        self.planSummaryJSON        = Self.encodePlan(plan)
+    }
+
+    /// Encode an InvestmentPlan to JSON string for archival
+    private static func encodePlan(_ plan: InvestmentPlan) -> String {
+        do {
+            let data = try JSONEncoder().encode(plan)
+            return String(data: data, encoding: .utf8) ?? "{}"
+        } catch {
+            assertionFailure("Failed to encode InvestmentPlan: \(error)")
+            return "{}"
+        }
+    }
+
+    /// Decode the archived plan back from JSON
+    func decodePlan() -> InvestmentPlan? {
+        guard let data = planSummaryJSON.data(using: .utf8) else { return nil }
+        return try? JSONDecoder().decode(InvestmentPlan.self, from: data)
     }
 }
  
@@ -459,7 +482,7 @@ struct SnapshotHistory: Codable, Identifiable {
 // MARK: — App State Container (single source of truth)
 // ─────────────────────────────────────────────
  
-/// The root object held by ProfileStore and injected as @EnvironmentObject.
+/// The root object held by ProfileStore and injected via @Environment.
 /// Every ViewModel reads and writes through this.
 struct AppState: Codable {
     var userProfile: UserProfile?
@@ -484,8 +507,12 @@ struct AppState: Codable {
 // ─────────────────────────────────────────────
  
 /// v1: UserDefaults-backed store. Replace body with SwiftData in v2.
-final class ProfileStore: ObservableObject {
-    @Published var state: AppState = AppState()
+///
+/// Uses the Swift 5.9+ @Observable macro. Inject into the SwiftUI hierarchy
+/// with `.environment()` and read in views with `@Environment(ProfileStore.self)`.
+@Observable
+final class ProfileStore {
+    var state: AppState = AppState()
  
     private let key = "wealthwise.appstate.v1"
  
