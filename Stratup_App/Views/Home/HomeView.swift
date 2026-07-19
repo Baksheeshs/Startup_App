@@ -151,7 +151,8 @@ struct HomeView: View {
                             name: pick.name,
                             subtitle: pick.subtitle,
                             returnPercent: pick.returnPercent,
-                            cardColor: pick.cardColor
+                            cardColor: pick.cardColor,
+                            iconImage: pick.iconImage
                         )
                     }
                 }

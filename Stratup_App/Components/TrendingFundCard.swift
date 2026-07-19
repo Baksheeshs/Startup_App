@@ -12,6 +12,7 @@ struct TrendingFundCard: View {
     let subtitle: String
     let returnPercent: String
     var cardColor: Color = .primaryPurple
+    var iconImage: String? = nil
 
     /// Circle diameter and how much it sticks out above the card
     private let circleSize: CGFloat = 64
@@ -96,8 +97,17 @@ struct TrendingFundCard: View {
             Circle()
                 .fill(.white.opacity(0.15))
                 .frame(width: circleSize - 8, height: circleSize - 8)
-            Text(emoji)
-                .font(.system(size: 30))
+
+            if let imageName = iconImage {
+                Image(imageName)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: circleSize - 10, height: circleSize - 10)
+                    .clipShape(Circle())
+            } else {
+                Text(emoji)
+                    .font(.system(size: 30))
+            }
         }
     }
 }
@@ -109,7 +119,8 @@ struct TrendingFundCard: View {
             name: "Mirae Asset Large Cap",
             subtitle: "Mutual Fund",
             returnPercent: "14.2%",
-            cardColor: .trendCoral
+            cardColor: .trendCoral,
+            iconImage: "mirae_growth"
         )
         TrendingFundCard(
             emoji: "🏆",

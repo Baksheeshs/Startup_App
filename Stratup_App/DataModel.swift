@@ -75,6 +75,7 @@ struct TrendingPick: Identifiable {
     let badgeColor: Color
     var isAdded: Bool
     var cardColor: Color = .primaryPurple
+    var iconImage: String? = nil
 }
 
 /// Goal item for Goals screen (S3)
@@ -177,7 +178,7 @@ enum SampleData {
             emoji: "📊", name: "Mirae Asset Large Cap", subtitle: "Mutual Fund",
             returnPercent: "14.2%", minAmount: "₹500/mo",
             badge: "TRENDING", badgeColor: .primaryPurple, isAdded: true,
-            cardColor: .trendCoral
+            cardColor: .trendCoral, iconImage: "mirae_growth"
         ),
         TrendingPick(
             emoji: "🏆", name: "SGB Gold Bond 2025", subtitle: "Sovereign Gold",
