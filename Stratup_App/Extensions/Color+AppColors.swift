@@ -52,6 +52,11 @@ extension Color {
     // MARK: — Bottom Nav
     static let navInactive         = Color(hex: 0x9CA3AF)
 
+    // MARK: — Trending Card Backgrounds
+    static let trendCoral          = Color(hex: 0xF0968D)
+    static let trendLavender       = Color(hex: 0x8B7BCC)
+    static let trendRose           = Color(hex: 0xE88BA7)
+
     // MARK: — Hex Initializer
     init(hex: UInt, alpha: Double = 1.0) {
         self.init(

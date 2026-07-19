@@ -1,37 +1,66 @@
 import SwiftUI
 
-/// Main tab container wrapping all 5 screens with the custom BottomNavBar.
-/// Manages tab selection and the Trending Picks full-screen overlay.
+/// Main tab container using native SwiftUI TabView for proper glass/blur effect,
+/// correct safe area handling, and no scroll-behind on the tab bar.
 struct MainTabView: View {
 
-    @State private var selectedTab: BottomNavBar.Tab = .home
+    @State private var selectedTab: AppTab = .home
     @State private var showTrending = false
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            // Active screen
-            Group {
-                switch selectedTab {
-                case .home:
-                    HomeView(onTrendingSeeAll: { showTrending = true })
-                case .portfolio:
-                    PortfolioView()
-                case .goals:
-                    GoalsView()
-                case .plans:
-                    PlansView()
-                case .profile:
-                    ProfileView()
+        TabView(selection: $selectedTab) {
+            HomeView(onTrendingSeeAll: { showTrending = true })
+                .tabItem {
+                    Label(AppTab.home.rawValue, systemImage: AppTab.home.icon)
                 }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .tag(AppTab.home)
 
-            // Bottom Navigation Bar
-            BottomNavBar(selectedTab: $selectedTab)
+            PortfolioView()
+                .tabItem {
+                    Label(AppTab.portfolio.rawValue, systemImage: AppTab.portfolio.icon)
+                }
+                .tag(AppTab.portfolio)
+
+            GoalsView()
+                .tabItem {
+                    Label(AppTab.goals.rawValue, systemImage: AppTab.goals.icon)
+                }
+                .tag(AppTab.goals)
+
+            PlansView()
+                .tabItem {
+                    Label(AppTab.plans.rawValue, systemImage: AppTab.plans.icon)
+                }
+                .tag(AppTab.plans)
+
+            ProfileView()
+                .tabItem {
+                    Label(AppTab.profile.rawValue, systemImage: AppTab.profile.icon)
+                }
+                .tag(AppTab.profile)
         }
-        .ignoresSafeArea(.keyboard)
+        .tint(Color.primaryPurple)
         .fullScreenCover(isPresented: $showTrending) {
             TrendingPicksView(onApply: { showTrending = false })
+        }
+    }
+}
+
+/// Shared tab definition used by the native TabView.
+enum AppTab: String, CaseIterable {
+    case home = "Home"
+    case portfolio = "Portfolio"
+    case goals = "Goals"
+    case plans = "Plans"
+    case profile = "Profile"
+
+    var icon: String {
+        switch self {
+        case .home:      return "house.fill"
+        case .portfolio: return "chart.bar.fill"
+        case .goals:     return "target"
+        case .plans:     return "calendar"
+        case .profile:   return "person.fill"
         }
     }
 }

@@ -21,7 +21,6 @@ struct PlansView: View {
                 // AI Decision Maker
                 decisionMakerSection
 
-                Spacer().frame(height: 80) // Space for bottom nav
             }
             .padding(.horizontal, AppSpacing.xLarge)
         }
@@ -32,14 +31,10 @@ struct PlansView: View {
 
     private var header: some View {
         HStack {
-            HStack(spacing: 8) {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(Color.textPrimary)
-                Text("Future Plans")
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundStyle(Color.textPrimary)
-            }
+            Text("Future Plans")
+                .font(.system(size: 22, weight: .bold))
+                .foregroundStyle(Color.textPrimary)
+
             Spacer()
         }
         .padding(.top, 8)

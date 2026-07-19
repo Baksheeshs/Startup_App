@@ -16,7 +16,6 @@ struct PortfolioView: View {
                 // Investment Categories
                 categoriesSection
 
-                Spacer().frame(height: 80) // Space for bottom nav
             }
             .padding(.horizontal, AppSpacing.xLarge)
         }
@@ -27,14 +26,9 @@ struct PortfolioView: View {
 
     private var header: some View {
         HStack {
-            HStack(spacing: 8) {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(Color.textPrimary)
-                Text("Portfolio")
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundStyle(Color.textPrimary)
-            }
+            Text("Portfolio")
+                .font(.system(size: 22, weight: .bold))
+                .foregroundStyle(Color.textPrimary)
 
             Spacer()
 

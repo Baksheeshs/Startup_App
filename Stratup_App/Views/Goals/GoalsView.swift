@@ -23,7 +23,6 @@ struct GoalsView: View {
                     message: "Increase Home goal SIP by ₹1,000/mo to achieve goal 6 months earlier."
                 )
 
-                Spacer().frame(height: 80) // Space for bottom nav
             }
             .padding(.horizontal, AppSpacing.xLarge)
         }
@@ -34,14 +33,9 @@ struct GoalsView: View {
 
     private var header: some View {
         HStack {
-            HStack(spacing: 8) {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(Color.textPrimary)
-                Text("My Goals")
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundStyle(Color.textPrimary)
-            }
+            Text("My Goals")
+                .font(.system(size: 22, weight: .bold))
+                .foregroundStyle(Color.textPrimary)
 
             Spacer()
 

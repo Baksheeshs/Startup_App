@@ -28,7 +28,6 @@ struct HomeView: View {
                 // Goals
                 goalsSection
 
-                Spacer().frame(height: 80) // Space for bottom nav
             }
             .padding(.horizontal, AppSpacing.xLarge)
         }
@@ -151,7 +150,8 @@ struct HomeView: View {
                             emoji: pick.emoji,
                             name: pick.name,
                             subtitle: pick.subtitle,
-                            returnPercent: pick.returnPercent
+                            returnPercent: pick.returnPercent,
+                            cardColor: pick.cardColor
                         )
                     }
                 }

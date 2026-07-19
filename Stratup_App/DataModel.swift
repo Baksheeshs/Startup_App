@@ -74,6 +74,7 @@ struct TrendingPick: Identifiable {
     let badge: String
     let badgeColor: Color
     var isAdded: Bool
+    var cardColor: Color = .primaryPurple
 }
 
 /// Goal item for Goals screen (S3)
@@ -175,17 +176,20 @@ enum SampleData {
         TrendingPick(
             emoji: "📊", name: "Mirae Asset Large Cap", subtitle: "Mutual Fund",
             returnPercent: "14.2%", minAmount: "₹500/mo",
-            badge: "TRENDING", badgeColor: .primaryPurple, isAdded: true
+            badge: "TRENDING", badgeColor: .primaryPurple, isAdded: true,
+            cardColor: .trendCoral
         ),
         TrendingPick(
             emoji: "🏆", name: "SGB Gold Bond 2025", subtitle: "Sovereign Gold",
             returnPercent: "11.8%", minAmount: "₹2,000 min",
-            badge: "LOW RISK", badgeColor: .accentOrange, isAdded: false
+            badge: "LOW RISK", badgeColor: .accentOrange, isAdded: false,
+            cardColor: .trendLavender
         ),
         TrendingPick(
             emoji: "🏦", name: "HDFC FD 500 Days", subtitle: "Fixed Deposit",
             returnPercent: "7.5%", minAmount: "₹10,000 min",
-            badge: "SAFE", badgeColor: .accentGreen, isAdded: false
+            badge: "SAFE", badgeColor: .accentGreen, isAdded: false,
+            cardColor: .trendRose
         ),
     ]
 

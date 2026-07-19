@@ -68,7 +68,6 @@ struct ProfileView: View {
                 }
                 .padding(.top, 8)
 
-                Spacer().frame(height: 80)
             }
             .padding(.horizontal, AppSpacing.xLarge)
         }
